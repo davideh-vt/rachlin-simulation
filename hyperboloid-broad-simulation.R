@@ -10,15 +10,18 @@ source("hyperboloid-unconstrained-analysis.R")
 # 2.1392701 -0.33509561
 # -0.3350956  0.05624541
 
-# Set seed from the command line
+# Set defaults for command line arguments
 seed <- 10000
+EFT_ln_k <- -5.86
+EFT_s <- 0.83
+
 args <- commandArgs(TRUE)
 if(length(args) > 0){
   for(i in 1:length(args)){
     eval(parse(text = args[[i]]))
   }
 }
-set.seed(seed)
+set.seed(seed)  # set seed, possibly based on command line argument
 
 sim_results <- data.frame(matrix(nrow = 1000, ncol = 58))
 # need to add columns for true parameters
@@ -36,8 +39,8 @@ names(sim_results) <- c("EFT_ln_k", "EFT_s", "NCC_ln_k", "NCC_s", "sigma_sq", "S
                         "lik_uc", "lik_uc_red", "lik_con", "lik_con_red", "F_con", "lik_mazur", "F_mazur")
 
 # Fill sim_results with parameters
-sim_results$EFT_ln_k <- -5.76
-sim_results$EFT_s <- 0.83
+sim_results$EFT_ln_k <- EFT_ln_k
+sim_results$EFT_s <- EFT_s
 sim_results$NCC_ln_k <- -5.86
 sim_results$NCC_s <- 0.83
 sim_results$sigma_sq <- 1.359326
@@ -226,6 +229,10 @@ sim_results$BIC_lin_con <- 6*log(n*n_tp) - 2*sim_results$lik_con
   # 1 random effect variance parameter
   # 1 independent variance parameter
 
+# Likelihood from Linearized Mazur
+sim_results$lik_mazur <- as.numeric(
+  -n*n_tp/2*(log(2*pi)+1) - 
+    n/2*(n_tp*log(sim_results$est_sigma_sq_mazur) + log(1+sim_results$est_g_mazur)))
 sim_results$BIC_mazur <- 4*log(n*n_tp) - 2*sim_results$lik_mazur
 # linearized Mazur model
 # 2 mean parameters
@@ -241,12 +248,6 @@ sim_results$BIC_nl <- 8*log(n*n_tp) - 2*(sim_results$lik_ut_nl - sim_results$der
 # F-statistic for constrained model
 sim_results$F_con <-
   (sim_results$red_est_con_g - sim_results$est_con_g)/(sim_results$est_con_g + 1)*(n-2)
-
-
-# Likelihood from Linearized Mazur
-sim_results$lik_mazur <- as.numeric(
-  -n*n_tp/2*(log(2*pi)+1) - 
-    n/2*(n_tp*log(sim_results$est_sigma_sq_mazur) + log(1+sim_results$est_g_mazur)))
 
 # Mahalanobis distance
 
