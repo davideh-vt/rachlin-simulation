@@ -2,15 +2,25 @@ library(mvtnorm)
 library(delaydiscount)
 library(nlme)
 library(multcomp) # TODO: Check if this was used
-source("C:/Users/deh99/Documents/Classes/Work/hyperboloid-analysis-function.R")
-source("C:/Users/deh99/Documents/Classes/Work/simulate-dataset-hyperboloid.R")
-source("C:/Users/deh99/Documents/Classes/Work/hyperboloid-unconstrained-analysis.R")
+source("hyperboloid-analysis-function.R")
+source("simulate-dataset-hyperboloid.R")
+source("hyperboloid-unconstrained-analysis.R")
 
  # Note: (X'X)^(-1) for the remedi dataset time points is:
 # 2.1392701 -0.33509561
 # -0.3350956  0.05624541
 
-sim_results <- data.frame(matrix(nrow = 100, ncol = 58))
+# Set seed from the command line
+seed <- 10000
+args <- commandArgs(TRUE)
+if(length(args) > 0){
+  for(i in 1:length(args)){
+    eval(parse(text = args[[i]]))
+  }
+}
+set.seed(seed)
+
+sim_results <- data.frame(matrix(nrow = 1000, ncol = 58))
 # need to add columns for true parameters
 names(sim_results) <- c("EFT_ln_k", "EFT_s", "NCC_ln_k", "NCC_s", "sigma_sq", "Sigma_11", "Sigma_12", "Sigma_22", "n_EFT", "n_NCC",
                         "EFT_est_ln_k", "EFT_est_s", "NCC_est_ln_k", "NCC_est_s", "est_sigma_sq", "est_Sigma_11", "est_Sigma_12", "est_Sigma_22",
@@ -26,7 +36,7 @@ names(sim_results) <- c("EFT_ln_k", "EFT_s", "NCC_ln_k", "NCC_s", "sigma_sq", "S
                         "lik_uc", "lik_uc_red", "lik_con", "lik_con_red", "F_con", "lik_mazur", "F_mazur")
 
 # Fill sim_results with parameters
-sim_results$EFT_ln_k <- -5.86
+sim_results$EFT_ln_k <- -5.76
 sim_results$EFT_s <- 0.83
 sim_results$NCC_ln_k <- -5.86
 sim_results$NCC_s <- 0.83
@@ -44,7 +54,7 @@ x_mat <- matrix(nrow = n_tp, ncol = 2)
 x_mat[,1] <- 1
 x_mat[,2] <- log(time_points)
 
-for(i in 1:100){
+for(i in 1:1000){
   # Simulate a dataset from the unconstrained hyperboloid model
   sim_data <- simulate_dataset_hyperboloid(groups = c("EFT", "NCC"),
                                            num_subj = c(sim_results$n_EFT[i], sim_results$n_NCC[i]),
@@ -256,7 +266,7 @@ sim_results$mh_dist_nl <- (
 
 # Save the output
 # TODO: Name the files by the simulation parameters
-write.csv(sim_results, "out1.csv")
+write.csv(sim_results, paste0("sim-results/out", seed, ".csv"))
 
 
 # p-values for nonlinearized based on LRT and on nlme estimate
